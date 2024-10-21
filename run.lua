@@ -6,6 +6,7 @@ local LeftTokenizer = LuaTokenizer:subclass()
 function LeftTokenizer:initSymbolsAndKeywords(...)
 	LeftTokenizer.super.initSymbolsAndKeywords(self, ...)
 	self.symbols:insert'->'
+	self.symbols:insert'!'
 end
 
 local LuaParser = require 'parser.lua.parser'
@@ -14,17 +15,41 @@ function LeftParser:buildTokenizer(data)
 	return LeftTokenizer(data, self.version, self.useluajit)
 end
 
+--[[ doesn't work for explist ...
+function LeftParser:parse_exp()	-- for lowest precedence
+--function LeftParser:parse_subexp()	-- for highest precedence
+	local a = self:parse_expr_precedenceTable(1)
+	--local a = LeftParser.super.parse_subexp(self)
+	if not a then return end
+	if self:canbe('->', 'symbol') then
+		local b = self:parse_exp()
+		--local b = self:parse_subexp()
+		return self:node('_call', b, a)
+	end
+	return a
+end
+--]]
+
 -- hmm now how to change the parser to use a lhs call ...
 -- lots of options ...
 -- insert a new operator?  but that's for exprs which are single entries of explists ...
 -- modify parse_prefixexp (so we get free statment support as well) , but there might be problems of it not telling _par from _call ... maybe ...)  gtting problems tho
 -- cheat: new prefix token for "expect an arglist , then a call" ... so the -> goes before the args, not after ... 
 function LeftParser:parse_prefixexp()
-	if self:canbe('->', 'symbol') then
+	-- me cheating more and giving a prefix to the call args ...
+	-- can't use [ because [[ is a comment/string
+	-- can't use ( because it interferes with parse_subexp's parse_prefixexp and then we can't use multiple explist
+	-- can't use { because that's a table ...
+	-- we need a prefix symbol that isn't already used
+	-- can't use : that's for gotos
+	-- can't use ~ # etc ...
+	-- and we can' tuse anythign if we want to chain them 
+	if self:canbe('!', 'symbol') then
 		local args = self:parse_args()
-		if not args then error("expected -> arglist") end
+		if not args then error("expected args") end
+		self:mustbe('->', 'symbol')
 		
-		-- now parse a function lhs
+		-- now parse a prefixexp lhs without args ...
 	
 		local prefixexp
 		local from = self:getloc()

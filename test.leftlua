@@ -1,4 +1,3 @@
--> ('Hello World') print	-- par works
--> 'Hello World' print	-- implicit string works
+!('Hello World') -> print
 local function add(a,b) return a + b end
--> (-> (2, 2) add) print	-- works
+!( !(2, 2) -> add) -> print

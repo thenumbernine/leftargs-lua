@@ -1,1 +1,4 @@
-print'Hello World'
+-> ('Hello World') print	-- par works
+-> 'Hello World' print	-- implicit string works
+local function add(a,b) return a + b end
+-> (-> (2, 2) add) print	-- works

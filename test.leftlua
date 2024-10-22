@@ -1,3 +1,8 @@
-!('Hello World') -> print
-local function add(a,b) return a + b end
-!( !(2, 2) -> add) -> print
+print'HelloWorld';
+('Hello World') -> print;
+local function add(a,b) return a + b end;
+(2, 2) -> add;
+(add) -> print;
+(add) -> print;	-- can't remove () ... unless I make -> an expr ... but you can't have single-expr stmts without assignments...
+((2, 2) -> add) -> print;
+(2, 2) -> add -> print;

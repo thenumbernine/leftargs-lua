@@ -1,8 +1,19 @@
+-- parser needs ; now to know when stmts end ...
+
 print'HelloWorld';
 ('Hello World') -> print;
 local function add(a,b) return a + b end;
 (2, 2) -> add;
 (add) -> print;
-(add) -> print;	-- can't remove () ... unless I make -> an expr ... but you can't have single-expr stmts without assignments...
+--add -> print;	-- can't remove () ... unless I make -> an expr ... but you can't have single-expr stmts without assignments...
 ((2, 2) -> add) -> print;
-(2, 2) -> add -> print;
+(2, 2) -> add -> print;		-- chaining now works
+((2,2) -> add, 2) -> add -> print;
+
+-- how about with indexes:
+
+t={};
+t.k=print;
+(2,2) -> t.k;
+(2,2) -> t['k'];
+--(2,2) -> t:k ;	-- not working yet

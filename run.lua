@@ -59,19 +59,17 @@ function LeftParser:parse_arrowcall_rhs(args, prefixexp)
 end
 
 
-local level = 0
-local function tprint(...)
-	print(('\t'):rep(level), ...)
-end
+--local level = 0
+--local function tprint(...) print(('\t'):rep(level), ...) end
 
 -- hmm now how to change the parser to use a lhs call ...
 -- lots of options ...
 -- insert a new operator?  but that's for exprs which are single entries of explists ...
 -- modify parse_prefixexp (so we get free statment support as well) , but there might be problems of it not telling _par from _call ... maybe ...)  gtting problems tho
--- cheat: new prefix token for "expect an arglist , then a call" ... so the -> goes before the args, not after ... 
+-- cheat: new prefix token for "expect an arglist , then a call" ... so the -> goes before the args, not after ...
 function LeftParser:parse_prefixexp()
-tprint('parse_prefixexp', self.t.token)
-level=level+1
+--tprint('parse_prefixexp', self.t.token)
+--level=level+1
 	-- me cheating more and giving a prefix to the call args ...
 	-- can't use [ because [[ is a comment/string
 	-- can't use ( because it interferes with parse_subexp's parse_prefixexp and then we can't use multiple explist
@@ -79,48 +77,50 @@ level=level+1
 	-- we need a prefix symbol that isn't already used
 	-- can't use : that's for gotos
 	-- can't use ~ # etc ...
-	-- and we can' tuse anythign if we want to chain them 
+	-- and we can' tuse anythign if we want to chain them
 	-- now if we change parse_prefixexp's ( exp ) to a ( explist ) then it doesn't break old code (I hope) but allows new
 	-- so in that case lets also throw in ->
-	
+
 	local prefixexp
 	local from = self:getloc()
 
 	if self:canbe('(', 'symbol') then
 		local args = assert(self:parse_explist(), 'unexpected symbol')
 		self:mustbe(')', 'symbol')
-	
+
 		-- [[ here we handle the new call operator
 		if self:canbe('->', 'symbol') then
 			-- now parse the function
 			repeat
-tprint('args', args:unpack())	
-tprint('token', self.t.token)				
+--tprint('args', args:unpack())
+--tprint('token', self.t.token)
 				--prefixexp = self:parse_prefixexp()
 				prefixexp = self:parse_exp()
-tprint('rhs', prefixexp)
+				--prefixexp = self:parse_var()
+
+--tprint('rhs', prefixexp)
 				prefixexp = self:parse_arrowcall_rhs(args, prefixexp)
-tprint('call', prefixexp)
+--tprint('call', prefixexp)
 				args = table{prefixexp}
 			until not self:canbe('->', 'symbol')
-level=level-1
-tprint('returning', prefixexp)			
+--level=level-1
+--tprint('returning', prefixexp)
 			return prefixexp
 		end
 		--]]
 
-		-- ( 1 2 3 ) ... should be an error for more than one unless we're using it in our new -> call operator 
+		-- ( 1 2 3 ) ... should be an error for more than one unless we're using it in our new -> call operator
 		assert(#args == 1, "expected ( exp ) , found more than one arg ...")
 		prefixexp = self:node('_par', args[1])
 			:setspan{from = from, to = self:getloc()}
-tprint('par prefixexp', prefixexp)	
+--tprint('par prefixexp', prefixexp)
 	elseif self:canbe(nil, 'name') then
 		prefixexp = self:node('_var', self.lasttoken)
 			:setspan{from = from, to = self:getloc()}
-tprint('name prefixexp', prefixexp)	
+--tprint('name prefixexp', prefixexp)
 	else
-level=level-1
-tprint('returning empty - prefixexp failed')	
+--level=level-1
+--tprint('returning empty - prefixexp failed')
 		return
 	end
 
@@ -154,8 +154,8 @@ tprint('returning empty - prefixexp failed')
 				:setspan{from = from, to = self:getloc()}
 		end
 	end
-level=level-1
-tprint('returning func call prefixexp', prefixexp)	
+--level=level-1
+--tprint('returning func call prefixexp', prefixexp)
 	return prefixexp
 end
 

@@ -16,4 +16,9 @@ t={};
 t.k=print;
 (2,2) -> t.k;
 (2,2) -> t['k'];
+(t,2,2) -> t['k'];
 --(2,2) -> t:k ;	-- not working yet
+
+-- here's one selling points: now function inputs are next to lambda outputs ...
+x = (2,2) -> add;
+x -> print;

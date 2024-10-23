@@ -163,7 +163,7 @@ end
 local source = ... or 'test.leftlua'
 local data = assert(path(source):read())
 local parser = LeftParser()
-parser:setData(data, source)
+assert(parser:setData(data, source))
 tree = parser.tree
 
 print()

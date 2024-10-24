@@ -18,6 +18,7 @@ t.k=print;
 (2,2) -> t['k'];
 (t,2,2) -> t['k'];
 --(2,2) -> t:k ;	-- not working yet
+-- building off this it would be good to have vararg-concat operators.  You can also get by with vararg-concat functions.
 
 x = (2,2) -> add;
 (x) -> print;

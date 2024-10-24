@@ -18,10 +18,10 @@ printing "Hello World"` in IL looks like:
 push "Hello World"
 call print
 ```
-But in programming languages it looks like ...
-- Right: `print("Hello World")`
-- Left: `"Hello World" -> print`
+- But in programming languages it looks like ...
+	- Right: `print("Hello World")`
+	- Left: `"Hello World" -> print`
 
 ## Reasons for right-associative function args:
 - ... Tradition?
-- Now Lua needs a statement-separator ; like C++. But maybe the grammer can be tweaked to get around this ...
+- Now Lua needs a statement-separator `;` like C++. But maybe the grammer can be tweaked to get around this, to treat `->` as an expression-operator as well as a statement, similar to how function-calls are already parsed exceptionally as either.  But function call statements already have their parsing gotches because of this.

@@ -24,16 +24,17 @@ call print
 
 ## Reasons for right-associative function args:
 - ... Tradition?
-- In the order of object member function calls, `t:k(...)` is equivalent to `t.k(t, ...)`.
-	- A left-associative call would now look like `(t, ...) -> t.k`, and now our `t`s are far apart.
-	- I could define the `:`-index-call operator to insert-left the `self` such that `(...) -> t:k` evaluates to `(t, ...) -> t.k`.
-	- Still, I'm suspicious that successive stream operations like `a(a1,a2,a3):b(b1,b2,b3):c(c1,c2,c3)` might look ugly.
-```
-	(c1, c2, c3) -> ((b1, b2, b3) -> ((a1,a2,a3) -> a):b):c
-```
-	- ... and now we have another mess.
-	- Maybe the only way to read operations in the order of their execution in combination with member fields and the self-call `:` operator is by mixing left- and right-associative function args?
-```
-	((a1,a2,a3) -> a) :b(b1, b2, b3) :c(c1, c2, c3)
-```
 - Now Lua needs a statement-separator `;` like C++. But maybe the grammer can be tweaked to get around this, to treat `->` as an expression-operator as well as a statement, similar to how function-calls are already parsed exceptionally as either.  But function call statements already have their parsing gotches because of this.
+
+
+## TODO
+
+Member function call support.  The `:` index-operator will now signal to expect an argument-list pointing to the name of a member function of whatever object is left of the `:`.
+RHS:
+``` Lua
+	a(a1,a2,a3):b(b1,b2,b3):c(c1,c2,c3)
+```
+LHS:
+``` Lua
+	((a1,a2,a3)->a):((b1,b2,b3)->b):((c1,c2,c3)->c)
+```

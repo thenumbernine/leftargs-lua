@@ -18,6 +18,12 @@ t.k=print;
 (2,2) -> t['k'];
 (t,2,2) -> t['k'];
 --(2,2) -> t:k ;	-- not working yet
+-- ... but how should successive a:b(1):c(2):d(3) work?
+-- ((1) -> a:b):((2)->c):((3)->d)
+-- or
+-- a:((1)->b):((2)->c):((3)->d)
+-- so obj: goes lhs of all, then ((args) -> field)
+-- ... should there be an arg similar to : that forwards allll args and not just the first one?  i.e. a:b():::d(4,5) , if a.b returns q,2,3 then q.d is called with q,2,3,4,5 ?
 -- building off this it would be good to have vararg-concat operators.  You can also get by with vararg-concat functions.
 
 x = (2,2) -> add;

@@ -38,3 +38,16 @@ LHS:
 ``` Lua
 	(a1,a2,a3)->a:(b1,b2,b3)->b:(c1,c2,c3)->c
 ```
+
+
+Another example of the differences:
+
+RHS:
+```
+print(path'file.bin':read():hexdump())
+```
+LHS:
+```
+'file.bin'->path->:read->:hexdump->print
+```
+... if I got rid of tables-and-strings-as-implicit-arg-for-lhs-calls then maybe I can no longer have ambiguities between stmts and still save the ;-optional syntax.

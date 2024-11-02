@@ -22,8 +22,10 @@ call print
 	- Right: `print("Hello World")`
 	- Left: `"Hello World" -> print`
 
+- This is what visual programming languages already do.  I am just combining visual and text programming language concepts.
+
 ## Reasons for right-associative function args:
-- ... Tradition?
+- ... Tradition?  300 years ago Euler wrote the input last and the function first, and everyone stuck with it.  [source](https://en.wikipedia.org/wiki/History_of_the_function_concept#The_notion_of_%22function%22_in_analysis).
 - Now Lua needs a statement-separator `;` like C++. But maybe the grammer can be tweaked to get around this, to treat `->` as an expression-operator as well as a statement, similar to how function-calls are already parsed exceptionally as either.  But function call statements already have their parsing gotches because of this.
 
 

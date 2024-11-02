@@ -1,4 +1,5 @@
 -- parser needs ; now to know when stmts end ...
+-- ... but once I get rid of all rhs args then hopefully it no longer will need ;'s
 
 ('Hello World') -> print
 

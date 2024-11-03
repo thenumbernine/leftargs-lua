@@ -43,7 +43,7 @@ function LeftParser:parse_stat()
 				else
 					-- then explist must be a bunch of _var definitions
 					for i=1,#explist do
-						assert.is(explist[i], self.ast._var)
+						assert.is(explist[i], self.ast._var, {msg="expected name"})
 					end
 					namelist = explist
 					explist = nil
@@ -197,7 +197,7 @@ end
 function LeftParser:parse_arrowcall_rhs(args, prefixexp)
 	while true do
 		if self:canbe('[', 'symbol') then
-			prefixexp = self:node('_index', prefixexp, (assert(self:parse_exp(), 'unexpected symbol')))
+			prefixexp = self:node('_index', prefixexp, (assert(self:parse_exp(), {msg='unexpected symbol'})))
 			self:mustbe(']', 'symbol')
 			prefixexp:setspan{from = from, to = self:getloc()}
 		elseif self:canbe('.', 'symbol') then
@@ -251,7 +251,7 @@ function LeftParser:parse_prefixexp()
 	local from = self:getloc()
 
 	if self:canbe('(', 'symbol') then
-		local args = assert(self:parse_explist(), 'unexpected symbol')
+		local args = assert(self:parse_explist(), {msg='unexpected symbol'})
 		self:mustbe(')', 'symbol')
 
 		-- [[ here we handle the new call operator
@@ -276,7 +276,7 @@ function LeftParser:parse_prefixexp()
 		--]]
 
 		-- ( 1 2 3 ) ... should be an error for more than one unless we're using it in our new -> call operator
-		assert(#args == 1, "expected ( exp ) , found more than one arg ...")
+		assert(#args == 1, {msg="expected ( exp ) , found more than one arg ..."})
 		prefixexp = self:node('_par', args[1])
 			:setspan{from = from, to = self:getloc()}
 --tprint('par prefixexp', prefixexp)
@@ -288,7 +288,7 @@ function LeftParser:parse_prefixexp()
 -- [[ old calling style
 	while true do
 		if self:canbe('[', 'symbol') then
-			prefixexp = self:node('_index', prefixexp, (assert(self:parse_exp(), 'unexpected symbol')))
+			prefixexp = self:node('_index', prefixexp, (assert(self:parse_exp(), {msg='unexpected symbol'})))
 			self:mustbe(']', 'symbol')
 			prefixexp:setspan{from = from, to = self:getloc()}
 		elseif self:canbe('.', 'symbol') then
@@ -305,8 +305,7 @@ function LeftParser:parse_prefixexp()
 				prefixexp,
 				self:mustbe(nil, 'name')
 			):setspan{from = from, to = self:getloc()}
-			local args = self:parse_args()
-			if not args then error"function arguments expected" end
+			local args = assert(self:parse_args(), {msg="function arguments expected"})
 			prefixexp = self:node('_call', prefixexp, table.unpack(args))
 				:setspan{from = from, to = self:getloc()}
 --]=]

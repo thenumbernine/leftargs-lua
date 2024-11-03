@@ -1,9 +1,25 @@
 -- parser needs ; now to know when stmts end ...
 -- ... but once I get rid of all rhs args then hopefully it no longer will need ;'s
 
-('Hello World') -> print
+-- => is left assign
+-- no ( ) and no ; needed
+local a
+local 1 => b
+local 2,3 => c,d
+-- but once we get into calls, that's when we gotta use ;
+(a,b,c,d) -> print;
+'Hello World' -> print
+for 1,10 => i do
+	('i', i) -> print
+end
 
-local function add(a,b) return a + b end
+{1=>a, 2=>b, 3=>c} => t
+for pairs(t) in k,v do
+	('kv', k,v) -> print
+end
+
+-- TODO make this parenthesis-less
+local (function(a,b) return a + b end) => add
 (2, 2) -> add;
 (add) -> print;
 --add -> print;	-- can't remove () ... unless I make -> an expr ... but you can't have single-expr stmts without assignments...
@@ -17,9 +33,13 @@ local function add(a,b) return a + b end
 {} => t;
 ('t is ', t) -> print;
 (print) => t.k;
+-- TODO ... maybe?
+--(print) => k,t;
 ('t.k is ', t.k) -> print;
 (2,2) -> t.k;
 (2,2) -> t['k'];
+-- TODO ... maybe?
+--(2,2) -> ['k']t;
 (t,2,2) -> t['k'];
 --t:(2,2)->k;	-- not working yet
 -- how successive a:b(1):c(2):d(3) should work:

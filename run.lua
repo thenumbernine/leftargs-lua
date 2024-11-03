@@ -1,6 +1,7 @@
 #!/usr/bin/env luajit
 local path = require 'ext.path'
 local table = require 'ext.table'
+local assert = require 'ext.assert'
 
 local LuaTokenizer = require 'parser.lua.tokenizer'
 local LeftTokenizer = LuaTokenizer:subclass()
@@ -24,32 +25,39 @@ function LeftParser:parse_stat()
 	if self:canbe('local', 'keyword') then
 		local ffrom = self:getloc()
 		if self:canbe('function', 'keyword') then
-			local name = self:mustbe(nil, 'name')
+			local namevar = assert(self:parse_var(), {msg='expected name'})
 			return self:node('_local', {
 				self:makeFunction(
-					self:node('_var', name),
+					namevar,
 					table.unpack((assert(self:parse_funcbody(), {msg="expected function body"})))
 				):setspan{from = ffrom , to = self:getloc()}
 			}):setspan{from = from , to = self:getloc()}
 		else
 			local afrom = self:getloc()
 
-			local explist = self:parse_args()
+			local namelist
+			local explist = self:parse_explist()
 			if explist then
-				self:mustbe('=>', 'symbol')
-			end
+				if self:canbe('=>', 'symbol') then
+					namelist = assert(self:parse_attnamelist(), {msg="expected attr name list"})
+				else
+					-- then explist must be a bunch of _var definitions
+					for i=1,#explist do
+						assert.is(explist[i], self.ast._var)
+					end
+					namelist = explist
+					explist = nil
+				end
 
-			local namelist = assert(self:parse_attnamelist(), {msg="expected attr name list"})
-
-			if explist then
-				local explist = assert(self:parse_explist(), {msg="expected expr list"})
-				local assign = self:node('_assign', namelist, explist)
-					:setspan{from = ffrom, to = self:getloc()}
-				return self:node('_local', {assign})
-					:setspan{from = from, to = self:getloc()}
-			else
-				return self:node('_local', namelist)
-					:setspan{from = from, to = self:getloc()}
+				if explist then
+					local assign = self:node('_assign', namelist, explist)
+						:setspan{from = ffrom, to = self:getloc()}
+					return self:node('_local', {assign})
+						:setspan{from = from, to = self:getloc()}
+				else
+					return self:node('_local', namelist)
+						:setspan{from = from, to = self:getloc()}
+				end
 			end
 		end
 	elseif self:canbe('function', 'keyword') then
@@ -57,10 +65,10 @@ function LeftParser:parse_stat()
 		return self:makeFunction(funcname, table.unpack((assert(self:parse_funcbody(), {msg="expected function body"}))))
 			:setspan{from = from , to = self:getloc()}
 	elseif self:canbe('for', 'keyword') then
-		local namelist = assert(self:parse_namelist(), {msg="expected name list"})
-		if self:canbe('=', 'symbol') then
+		local explist = assert(self:parse_explist(), {msg="expected exp list"})
+		if self:canbe('=>', 'symbol') then
+			local namelist = assert(self:parse_namelist(), {msg="expected name list"})
 			assert.eq(#namelist, 1, {msg="expected only one name in for loop"})
-			local explist = assert(self:parse_explist(), {msg="expected exp list"})
 			assert.ge(#explist, 2, {msg="bad for loop"})
 			assert.le(#explist, 3, {msg="bad for loop"})
 			self:mustbe('do', 'keyword')
@@ -69,7 +77,7 @@ function LeftParser:parse_stat()
 			return self:node('_foreq', namelist[1], explist[1], explist[2], explist[3], table.unpack(block))
 				:setspan{from = from, to = self:getloc()}
 		elseif self:canbe('in', 'keyword') then
-			local explist = assert(self:parse_explist(), {msg="expected expr list"})
+			local namelist = assert(self:parse_namelist(), {msg="expected name list"})
 			self:mustbe('do', 'keyword')
 			local block = assert(self:parse_block'for in', {msg="expected block"})
 			self:mustbe('end', 'keyword')
@@ -272,14 +280,9 @@ function LeftParser:parse_prefixexp()
 		prefixexp = self:node('_par', args[1])
 			:setspan{from = from, to = self:getloc()}
 --tprint('par prefixexp', prefixexp)
-	elseif self:canbe(nil, 'name') then
-		prefixexp = self:node('_var', self.lasttoken)
-			:setspan{from = from, to = self:getloc()}
---tprint('name prefixexp', prefixexp)
 	else
---level=level-1
---tprint('returning empty - prefixexp failed')
-		return
+		prefixexp = self:parse_var()
+		if not prefixexp then return end
 	end
 
 -- [[ old calling style
@@ -320,6 +323,31 @@ function LeftParser:parse_prefixexp()
 --tprint('returning func call prefixexp', prefixexp)
 	return prefixexp
 end
+
+function LeftParser:parse_field()
+	local from = self:getloc()
+
+	local valexp = self:parse_exp()
+	if not valexp then return end
+
+	if not self:canbe('=>', 'symbol') then
+		return valexp
+	end
+
+	local keyexp
+	if self:canbe('[', 'symbol') then
+		keyexp = assert(self:parse_exp(), {msg='unexpected symbol'})
+		self:mustbe(']', 'symbol')
+	else
+		keyexp = assert(self:parse_var(), {msg='expected name'})
+		-- convert from _var to _string
+		keyexp = self:node('_string', keyexp.name):setspan(keyexp.span)
+	end
+	return self:node('_assign', {keyexp}, {valexp})
+		:setspan{from = from, to = self:getloc()}
+end
+
+
 
 --local source = assert(..., "expected filename")
 local source = ... or 'test.leftlua'

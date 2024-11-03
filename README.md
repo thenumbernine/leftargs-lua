@@ -1,6 +1,18 @@
 Here's a new idea I had...
 
 Put function parenthesis on the left instead of the right.
+Why not assignment too?
+Why not everything?
+
+# Changes:
+
+| RHS          | LHS           |
+|--------------|---------------|
+|`f(x)`        |`x -> f`       |
+|`x = 1`       |`1 => x`       |
+|`t = {k = v}` |`{v => k} => t`|
+|`for x=1,7,2` |`for 1,7,2=>x` |
+|`for k,v in g`|`for g in k,v` |
 
 ## Reason for left-associative function args:
 - Grammar order now follows evaluation order.  If you want to start with x, apply f, then g, then h:

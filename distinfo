@@ -1,0 +1,10 @@
+name = "leftargs"
+files = {
+	["README.md"] = "leftargs/README.md",
+	["run.lua"] = "leftargs/run.lua",
+	["test.leftlua"] = "leftargs/test.leftlua",
+}
+deps = {
+	"ext",
+	"parser",
+}

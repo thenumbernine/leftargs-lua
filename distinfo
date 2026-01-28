@@ -1,8 +1,13 @@
+--------------------------------------------
+-- generated with dist/build-distinfo.rua --
+--------------------------------------------
+
 name = "leftargs"
 files = {
-	["README.md"] = "leftargs/README.md",
-	["run.lua"] = "leftargs/run.lua",
-	["test.leftlua"] = "leftargs/test.leftlua",
+	"README.md",
+	"distinfo",
+	"run.lua",
+	"test.leftlua",
 }
 deps = {
 	"ext",

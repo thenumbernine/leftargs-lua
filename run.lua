@@ -30,8 +30,8 @@ function LeftParser:parse_stat()
 				self:makeFunction(
 					namevar,
 					table.unpack((assert(self:parse_funcbody(), {msg="expected function body"})))
-				):setspan{from = ffrom , to = self:getloc()}
-			}):setspan{from = from , to = self:getloc()}
+				):setspan(ffrom, self:getloc())
+			}):setspan(from, self:getloc())
 		else
 			local afrom = self:getloc()
 
@@ -51,19 +51,19 @@ function LeftParser:parse_stat()
 
 				if explist then
 					local assign = self:node('_assign', namelist, explist)
-						:setspan{from = ffrom, to = self:getloc()}
+						:setspan(ffrom, self:getloc())
 					return self:node('_local', {assign})
-						:setspan{from = from, to = self:getloc()}
+						:setspan(from, self:getloc())
 				else
 					return self:node('_local', namelist)
-						:setspan{from = from, to = self:getloc()}
+						:setspan(from, self:getloc())
 				end
 			end
 		end
 	elseif self:canbe('function', 'keyword') then
 		local funcname = self:parse_funcname()
 		return self:makeFunction(funcname, table.unpack((assert(self:parse_funcbody(), {msg="expected function body"}))))
-			:setspan{from = from , to = self:getloc()}
+			:setspan(from , self:getloc())
 	elseif self:canbe('for', 'keyword') then
 		local explist = assert(self:parse_explist(), {msg="expected exp list"})
 		if self:canbe('=>', 'symbol') then
@@ -75,14 +75,14 @@ function LeftParser:parse_stat()
 			local block = assert(self:parse_block'for =', {msg="for loop expected block"})
 			self:mustbe('end', 'keyword')
 			return self:node('_foreq', namelist[1], explist[1], explist[2], explist[3], table.unpack(block))
-				:setspan{from = from, to = self:getloc()}
+				:setspan(from, self:getloc())
 		elseif self:canbe('in', 'keyword') then
 			local namelist = assert(self:parse_namelist(), {msg="expected name list"})
 			self:mustbe('do', 'keyword')
 			local block = assert(self:parse_block'for in', {msg="expected block"})
 			self:mustbe('end', 'keyword')
 			return self:node('_forin', namelist, explist, table.unpack(block))
-				:setspan{from = from, to = self:getloc()}
+				:setspan(from, self:getloc())
 		else
 			error{msg="'=' or 'in' expected"}
 		end
@@ -98,19 +98,19 @@ function LeftParser:parse_stat()
 			self:mustbe('then', 'keyword')
 			stmts:insert(
 				self:node('_elseif', cond, table.unpack((assert(self:parse_block(), {msg='expected block'}))))
-					:setspan{from = efrom, to = self:getloc()}
+					:setspan(efrom, self:getloc())
 			)
 			efrom = self:getloc()
 		end
 		if self:canbe('else', 'keyword') then
 			stmts:insert(
 				self:node('_else', table.unpack((assert(self:parse_block(), {msg='expected block'}))))
-					:setspan{from = efrom, to = self:getloc()}
+					:setspan(efrom, self:getloc())
 			)
 		end
 		self:mustbe('end', 'keyword')
 		return self:node('_if', cond, table.unpack(stmts))
-			:setspan{from = from, to = self:getloc()}
+			:setspan(from, self:getloc())
 	elseif self:canbe('repeat', 'keyword') then
 		local block = assert(self:parse_block'repeat', {msg='expected block'})
 		self:mustbe('until', 'keyword')
@@ -118,36 +118,36 @@ function LeftParser:parse_stat()
 			'_repeat',
 			(assert(self:parse_exp(), {msg='unexpected symbol'})),
 			table.unpack(block)
-		):setspan{from = from, to = self:getloc()}
+		):setspan(from, self:getloc())
 	elseif self:canbe('while', 'keyword') then
 		local cond = assert(self:parse_exp(), {msg='unexpected symbol'})
 		self:mustbe('do', 'keyword')
 		local block = assert(self:parse_block'while', {msg='expected block'})
 		self:mustbe('end', 'keyword')
 		return self:node('_while', cond, table.unpack(block))
-			:setspan{from = from, to = self:getloc()}
+			:setspan(from, self:getloc())
 	elseif self:canbe('do', 'keyword') then
 		local block = assert(self:parse_block(), {msg='expected block'})
 		self:mustbe('end', 'keyword')
 		return self:node('_do', table.unpack(block))
-			:setspan{from = from, to = self:getloc()}
+			:setspan(from, self:getloc())
 	elseif self.version >= '5.2' then
 		if self:canbe('goto', 'keyword') then
 			local name = self:mustbe(nil, 'name')
 			local g = self:node('_goto', name)
-				:setspan{from = from, to = self:getloc()}
+				:setspan(from, self:getloc())
 			self.gotos[name] = g
 			return g
 		-- lua5.2+ break is a statement, so you can have multiple breaks in a row with no syntax error
 		elseif self:canbe('break', 'keyword') then
 			return self:parse_break()
-				:setspan{from = from, to = self:getloc()}
+				:setspan(from, self:getloc())
 		elseif self:canbe('::', 'symbol') then
 			local name = self:mustbe(nil, 'name')
 			local l = self:node('_label', name)
 			self.labels[name] = true
 			self:mustbe('::', 'symbol')
-			return l:setspan{from = from, to = self:getloc()}
+			return l:setspan(from, self:getloc())
 		end
 	end
 
@@ -162,7 +162,7 @@ function LeftParser:parse_stat()
 				vars:insert(var)
 			end
 			return self:node('_assign', vars, args)
-				:setspan{from = from, to = self:getloc()}
+				:setspan(from, self:getloc())
 		elseif self:canbe('->', 'symbol') then
 			local prefixexp
 			repeat
@@ -199,27 +199,27 @@ function LeftParser:parse_arrowcall_rhs(args, prefixexp)
 		if self:canbe('[', 'symbol') then
 			prefixexp = self:node('_index', prefixexp, (assert(self:parse_exp(), {msg='unexpected symbol'})))
 			self:mustbe(']', 'symbol')
-			prefixexp:setspan{from = from, to = self:getloc()}
+			prefixexp:setspan(from, self:getloc())
 		elseif self:canbe('.', 'symbol') then
 			local sfrom = self:getloc()
 			prefixexp = self:node('_index',
 				prefixexp,
 				self:node('_string', self:mustbe(nil, 'name'))
-					:setspan{from = sfrom, to = self:getloc()}
+					:setspan(sfrom, self:getloc())
 			)
-			:setspan{from = from, to = self:getloc()}
+			:setspan(from, self:getloc())
 --[[
 		elseif self:canbe(':', 'symbol') then
 			prefixexp = self:node('_indexself',
 				prefixexp,
 				self:mustbe(nil, 'name')
-			):setspan{from = from, to = self:getloc()}
+			):setspan(from, self:getloc())
 			return self:node('_call', prefixexp, table.unpack(args))
-				:setspan{from = from, to = self:getloc()}
+				:setspan(from, self:getloc())
 --]]
 		else
 			return self:node('_call', prefixexp, table.unpack(args))
-				:setspan{from = from, to = self:getloc()}
+				:setspan(from, self:getloc())
 		end
 	end
 end
@@ -278,7 +278,7 @@ function LeftParser:parse_prefixexp()
 		-- ( 1 2 3 ) ... should be an error for more than one unless we're using it in our new -> call operator
 		assert(#args == 1, {msg="expected ( exp ) , found more than one arg ..."})
 		prefixexp = self:node('_par', args[1])
-			:setspan{from = from, to = self:getloc()}
+			:setspan(from, self:getloc())
 --tprint('par prefixexp', prefixexp)
 	else
 		prefixexp = self:parse_var()
@@ -290,31 +290,31 @@ function LeftParser:parse_prefixexp()
 		if self:canbe('[', 'symbol') then
 			prefixexp = self:node('_index', prefixexp, (assert(self:parse_exp(), {msg='unexpected symbol'})))
 			self:mustbe(']', 'symbol')
-			prefixexp:setspan{from = from, to = self:getloc()}
+			prefixexp:setspan(from, self:getloc())
 		elseif self:canbe('.', 'symbol') then
 			local sfrom = self:getloc()
 			prefixexp = self:node('_index',
 				prefixexp,
 				self:node('_string', self:mustbe(nil, 'name'))
-					:setspan{from = sfrom, to = self:getloc()}
+					:setspan(sfrom, self:getloc())
 			)
-			:setspan{from = from, to = self:getloc()}
+			:setspan(from, self:getloc())
 --[=[
 		elseif self:canbe(':', 'symbol') then
 			prefixexp = self:node('_indexself',
 				prefixexp,
 				self:mustbe(nil, 'name')
-			):setspan{from = from, to = self:getloc()}
+			):setspan(from, self:getloc())
 			local args = assert(self:parse_args(), {msg="function arguments expected"})
 			prefixexp = self:node('_call', prefixexp, table.unpack(args))
-				:setspan{from = from, to = self:getloc()}
+				:setspan(from, self:getloc())
 --]=]
 		else
 			local args = self:parse_args()
 			if not args then break end
 
 			prefixexp = self:node('_call', prefixexp, table.unpack(args))
-				:setspan{from = from, to = self:getloc()}
+				:setspan(from, self:getloc())
 		end
 	end
 --]]
@@ -340,10 +340,10 @@ function LeftParser:parse_field()
 	else
 		keyexp = assert(self:parse_var(), {msg='expected name'})
 		-- convert from _var to _string
-		keyexp = self:node('_string', keyexp.name):setspan(keyexp.span)
+		keyexp = self:node('_string', keyexp.name):setspan(keyexp.spanFrom, keyexp.spanTo)
 	end
 	return self:node('_assign', {keyexp}, {valexp})
-		:setspan{from = from, to = self:getloc()}
+		:setspan(from, self:getloc())
 end
 
 
